@@ -1,0 +1,38 @@
+name: .NET Appium framework CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  build-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+      - name: Restore
+        run: dotnet restore AppiumInterviewFramework.sln
+      - name: Build
+        run: dotnet build AppiumInterviewFramework.sln --configuration Release --no-restore
+      - name: Run configuration checks
+        run: dotnet test AppiumInterviewFramework.sln --configuration Release --no-build --filter Category=BuildValidation
+
+  mobile-smoke:
+    if: ${{ vars.RUN_APPIUM_TESTS == 'true' }}
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+      - name: Restore and build
+        run: dotnet build AppiumInterviewFramework.sln --configuration Release
+      - name: Run Appium smoke test
+        env:
+          RUN_APPIUM_TESTS: true
+          DEMO_APP_USERNAME: ${{ secrets.DEMO_APP_USERNAME }}
+          DEMO_APP_PASSWORD: ${{ secrets.DEMO_APP_PASSWORD }}
+        run: dotnet test AppiumInterviewFramework.sln --configuration Release --no-build --filter Category=Mobile

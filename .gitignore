@@ -1,0 +1,33 @@
+# Build output
+bin/
+obj/
+.vs/
+.idea/
+
+# Test artifacts
+TestResults/
+artifacts/
+*.trx
+
+# Task-level deliverable folders
+outputs/
+work/
+
+# Local configuration and secrets
+.env
+.env.*
+*.user
+*.suo
+secrets.json
+
+# Mobile binaries and signing material
+*.apk
+*.aab
+*.app/
+*.ipa
+*.p12
+*.mobileprovision
+
+# OS files
+.DS_Store
+Thumbs.db
