@@ -30,8 +30,15 @@ public sealed class ConfigurationTests
         Assert.That(exception!.Message, Does.Contain("BrowserStack.Username"));
         Assert.That(exception.Message, Does.Contain("BrowserStack.AccessKey"));
         Assert.That(exception.Message, Does.Contain("BrowserStack.AppUrl"));
-        Assert.That(exception.Message, Does.Contain("BrowserStack.DeviceName"));
-        Assert.That(exception.Message, Does.Contain("BrowserStack.OsVersion"));
+
+        Assert.That(options.BrowserStack.DeviceName, Is.EqualTo("Google Pixel 7"));
+        Assert.That(options.BrowserStack.OsVersion, Is.EqualTo("13.0"));
+        Assert.That(options.BrowserStack.ProjectName, Is.EqualTo("Mobile Automation"));
+        Assert.That(options.BrowserStack.BuildName, Is.EqualTo("Regression Build"));
+        Assert.That(options.BrowserStack.SessionName, Is.EqualTo("Login Test"));
+        Assert.That(options.BrowserStack.Debug, Is.True);
+        Assert.That(options.BrowserStack.Video, Is.True);
+        Assert.That(options.BrowserStack.NetworkLogs, Is.True);
     }
 
     [Test, Category("BuildValidation")]

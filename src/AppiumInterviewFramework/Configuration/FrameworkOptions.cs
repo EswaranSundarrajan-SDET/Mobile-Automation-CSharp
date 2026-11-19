@@ -71,19 +71,19 @@ public sealed class BrowserStackOptions
 
     public string AppUrl { get; set; } = string.Empty;
 
-    public string DeviceName { get; set; } = string.Empty;
+    public string DeviceName { get; set; } = "Google Pixel 7";
 
-    public string OsVersion { get; set; } = string.Empty;
+    public string OsVersion { get; set; } = "13.0";
 
-    public string ProjectName { get; set; } = "CSharp Appium Interview Framework";
+    public string ProjectName { get; set; } = "Mobile Automation";
 
-    public string BuildName { get; set; } = "local-build";
+    public string BuildName { get; set; } = "Regression Build";
 
-    public string SessionName { get; set; } = "Appium login smoke";
+    public string SessionName { get; set; } = "Login Test";
 
-    public bool Debug { get; set; }
+    public bool Debug { get; set; } = true;
 
-    public bool Video { get; set; }
+    public bool Video { get; set; } = true;
 
-    public bool NetworkLogs { get; set; }
+    public bool NetworkLogs { get; set; } = true;
 }

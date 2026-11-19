@@ -72,27 +72,27 @@ The configuration loader also reads environment variables using .NET's double-un
 
 ### BrowserStack App Automate execution
 
-The same driver factory can target BrowserStack App Automate by setting `BROWSERSTACK_ENABLED=true`. The checked-in JSON contains safe defaults only; username, access key, app URL, device, and OS version must be supplied at runtime. The framework uses Appium .NET v5 typed standard capabilities for platform, automation name, device, OS version, and app, plus the W3C `bstack:options` extension for BrowserStack metadata and optional diagnostics.
+The same driver factory can target BrowserStack App Automate by setting `BROWSERSTACK_ENABLED=true`. The checked-in JSON contains safe defaults only; username, access key, and the uploaded app URL must be supplied at runtime. The framework uses Android by default with Appium .NET v5 typed standard capabilities for platform, automation name, device, OS version, and app, plus the W3C `bstack:options` extension for BrowserStack metadata and optional diagnostics.
 
-When BrowserStack is enabled, these values are required:
+When BrowserStack is enabled, provide these required values. Device, OS version, metadata, and diagnostics have safe defaults and can be overridden when needed:
 
 | Setting | Purpose |
 | --- | --- |
 | `BROWSERSTACK_USERNAME` | BrowserStack account username, stored as a secret |
 | `BROWSERSTACK_ACCESS_KEY` | BrowserStack access key, stored as a secret |
-| `BROWSERSTACK_APP_URL` | Uploaded app identifier such as `bs://...` |
-| `BROWSERSTACK_DEVICE_NAME` | BrowserStack real device name |
-| `BROWSERSTACK_OS_VERSION` | Device operating-system version |
+| `BROWSERSTACK_APP_URL` | The `app_url` value returned by the BrowserStack upload response |
+| `BROWSERSTACK_DEVICE_NAME` | Optional override; defaults to `Google Pixel 7` |
+| `BROWSERSTACK_OS_VERSION` | Optional override; defaults to `13.0` |
 | `BROWSERSTACK_HUB_URL` | Appium hub URL; defaults to `https://hub-cloud.browserstack.com/wd/hub` |
 | `BROWSERSTACK_PROJECT_NAME` | BrowserStack project grouping |
 | `BROWSERSTACK_BUILD_NAME` | Build grouping for dashboards |
 | `BROWSERSTACK_SESSION_NAME` | Human-readable session name |
 
-Optional diagnostic settings are `BROWSERSTACK_DEBUG`, `BROWSERSTACK_VIDEO`, and `BROWSERSTACK_NETWORK_LOGS`. They default to `false` unless enabled through environment variables. The same settings can be expressed with .NET nested names such as `BrowserStack__AccessKey`; the uppercase `BROWSERSTACK_*` aliases are convenient for local shells and CI.
+Diagnostic settings are `BROWSERSTACK_DEBUG`, `BROWSERSTACK_VIDEO`, and `BROWSERSTACK_NETWORK_LOGS`; they default to `true` for this interview smoke configuration and can be set to `false`. The same settings can be expressed with .NET nested names such as `BrowserStack__AccessKey`; the uppercase `BROWSERSTACK_*` aliases are convenient for local shells and CI.
 
 #### Upload an app and obtain its app URL
 
-Upload the APK or IPA through the BrowserStack App Automate upload API. The response contains an `app_url` value beginning with `bs://`; use that value for `BROWSERSTACK_APP_URL`. Do not commit the binary or the credentials.
+Upload the APK or IPA through the BrowserStack App Automate upload API. The response contains an `app_url` value; copy that value into the `BROWSERSTACK_APP_URL` environment variable or GitHub repository variable. Do not commit the binary, app ID, or credentials.
 
 ```bash
 curl -u "${BROWSERSTACK_USERNAME}:${BROWSERSTACK_ACCESS_KEY}" \
@@ -116,22 +116,15 @@ $env:RUN_APPIUM_TESTS = "true"
 $env:BROWSERSTACK_ENABLED = "true"
 $env:BROWSERSTACK_USERNAME = "value-from-your-secret-store"
 $env:BROWSERSTACK_ACCESS_KEY = "value-from-your-secret-store"
-$env:BROWSERSTACK_APP_URL = "bs://your-uploaded-app-id"
-$env:BROWSERSTACK_DEVICE_NAME = "Google Pixel 7"
-$env:BROWSERSTACK_OS_VERSION = "13.0"
-$env:BROWSERSTACK_PROJECT_NAME = "CSharp Appium Interview Framework"
-$env:BROWSERSTACK_BUILD_NAME = "interview-prep-local"
-$env:BROWSERSTACK_SESSION_NAME = "login-smoke"
-$env:BROWSERSTACK_DEBUG = "true"
-$env:BROWSERSTACK_VIDEO = "true"
-$env:BROWSERSTACK_NETWORK_LOGS = "true"
+$env:BROWSERSTACK_APP_URL = "value-returned-by-browserstack-upload"
+# Device, OS, project, build, session, and diagnostics use safe defaults unless overridden.
 $env:DEMO_APP_USERNAME = "value-from-your-secret-store"
 $env:DEMO_APP_PASSWORD = "value-from-your-secret-store"
 
 dotnet test AppiumInterviewFramework.sln --filter Category=Mobile
 ```
 
-The app URL, device name, and OS version must match the uploaded app and the BrowserStack device catalog. The sample login locators remain placeholders and must be replaced with the real app's accessibility IDs.
+The app URL must be the value returned by BrowserStack's upload response, and the default device/OS must be available in the BrowserStack catalog. The sample login locators remain placeholders and must be replaced with the real app's accessibility IDs.
 
 #### App Live versus App Automate
 
@@ -174,19 +167,21 @@ The included workflow always restores, builds, and runs the device-free `BuildVa
 
 Store `DEMO_APP_USERNAME` and `DEMO_APP_PASSWORD` as CI secrets. Put device/app configuration in runner environment variables or a protected CI configuration layer; do not place credentials in `appsettings.json` or source control.
 
-The `browserstack-smoke` job is also opt-in. Enable it by setting the repository variable `RUN_BROWSERSTACK_TESTS=true` or by manually starting the workflow with the `run_browserstack` input. Configure these repository secrets:
+The `browserstack-smoke` job is also opt-in. Enable it by setting the repository variable `RUN_BROWSERSTACK_TESTS=true` or by manually starting the workflow with the `run_browserstack` input.
+
+In the GitHub repository, open **Settings → Secrets and variables → Actions**. Under **Repository secrets**, select **New repository secret** and add these exact names without placing their values in source control:
 
 - `BROWSERSTACK_USERNAME`
 - `BROWSERSTACK_ACCESS_KEY`
 - `DEMO_APP_USERNAME`
 - `DEMO_APP_PASSWORD`
 
-Configure these non-secret repository variables:
+Under **Repository variables**, select **New repository variable** and add:
 
 - `BROWSERSTACK_APP_URL`
-- `BROWSERSTACK_DEVICE_NAME`
-- `BROWSERSTACK_OS_VERSION`
-- Optional: `BROWSERSTACK_HUB_URL`, `BROWSERSTACK_PROJECT_NAME`, `BROWSERSTACK_BUILD_NAME`, `BROWSERSTACK_SESSION_NAME`, `BROWSERSTACK_DEBUG`, `BROWSERSTACK_VIDEO`, and `BROWSERSTACK_NETWORK_LOGS`.
+- Optional overrides: `BROWSERSTACK_DEVICE_NAME`, `BROWSERSTACK_OS_VERSION`, `BROWSERSTACK_HUB_URL`, `BROWSERSTACK_PROJECT_NAME`, `BROWSERSTACK_BUILD_NAME`, `BROWSERSTACK_SESSION_NAME`, `BROWSERSTACK_DEBUG`, `BROWSERSTACK_VIDEO`, and `BROWSERSTACK_NETWORK_LOGS`.
+
+The workflow reads `BROWSERSTACK_USERNAME`, `BROWSERSTACK_ACCESS_KEY`, `DEMO_APP_USERNAME`, and `DEMO_APP_PASSWORD` only from GitHub Secrets. It reads the uploaded app URL and optional execution settings from GitHub Variables. Never paste a credential, access key, or real app ID into `appsettings.json`, README examples, workflow YAML, or commits.
 
 The job validates required BrowserStack inputs before starting a remote session, runs the `Mobile` category, and publishes test results and failure artifacts when available. BrowserStack does not require a local Appium server in this job because the driver connects directly to the cloud hub.
 

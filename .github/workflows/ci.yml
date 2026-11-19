@@ -47,6 +47,9 @@ jobs:
   browserstack-smoke:
     if: ${{ vars.RUN_BROWSERSTACK_TESTS == 'true' || inputs.run_browserstack == true }}
     runs-on: ubuntu-latest
+    # Required repository secrets: BROWSERSTACK_USERNAME, BROWSERSTACK_ACCESS_KEY,
+    # DEMO_APP_USERNAME, and DEMO_APP_PASSWORD. Required repository variable: BROWSERSTACK_APP_URL.
+    # Device/OS and metadata variables are optional and fall back to the checked-in safe defaults.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -60,15 +63,11 @@ jobs:
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           BROWSERSTACK_APP_URL: ${{ vars.BROWSERSTACK_APP_URL }}
-          BROWSERSTACK_DEVICE_NAME: ${{ vars.BROWSERSTACK_DEVICE_NAME }}
-          BROWSERSTACK_OS_VERSION: ${{ vars.BROWSERSTACK_OS_VERSION }}
         run: |
           missing=()
           [[ -z "$BROWSERSTACK_USERNAME" ]] && missing+=(BROWSERSTACK_USERNAME)
           [[ -z "$BROWSERSTACK_ACCESS_KEY" ]] && missing+=(BROWSERSTACK_ACCESS_KEY)
           [[ -z "$BROWSERSTACK_APP_URL" ]] && missing+=(BROWSERSTACK_APP_URL)
-          [[ -z "$BROWSERSTACK_DEVICE_NAME" ]] && missing+=(BROWSERSTACK_DEVICE_NAME)
-          [[ -z "$BROWSERSTACK_OS_VERSION" ]] && missing+=(BROWSERSTACK_OS_VERSION)
           if (( ${#missing[@]} > 0 )); then
             echo "::error::BrowserStack smoke is enabled but these secrets/variables are missing: ${missing[*]}"
             exit 1
