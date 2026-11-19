@@ -12,7 +12,7 @@ An intentionally small but credible mobile automation framework for demonstratin
 - W3C touch swipe helper using Selenium action sequences.
 - NUnit setup/teardown with failure screenshots and a small diagnostic log.
 - Build-validation test that does not require a device, plus a realistic mobile login test.
-- GitHub Actions workflow for build validation and optional self-hosted mobile smoke execution.
+- GitHub Actions workflow for build validation, optional self-hosted mobile smoke execution, and an opt-in BrowserStack App Automate smoke job.
 
 ## Architecture
 
@@ -70,11 +70,72 @@ For iOS, set `Platform` to `Ios`, use `XCUITest`, and provide `AppPath` or `Bund
 
 The configuration loader also reads environment variables using .NET's double-underscore convention, for example `Android__DeviceName`, `Android__AppPath`, or `AppiumServerUrl`. Keep usernames and passwords out of JSON; the sample test reads `DEMO_APP_USERNAME` and `DEMO_APP_PASSWORD` from the process environment.
 
-### Optional BrowserStack execution
+### BrowserStack App Automate execution
 
-The same driver factory can target BrowserStack App Automate by setting `BrowserStack__Enabled=true`. Supply `BrowserStack__Username`, `BrowserStack__AccessKey`, and `BrowserStack__App` through the CI secret/environment layer; the checked-in JSON intentionally leaves those values empty. The factory sends the standard `bstack:options` block and uses the configured BrowserStack hub URL. BrowserStack App Live is useful for manual exploratory/device debugging, while App Automate is the Appium execution service used by this framework.
+The same driver factory can target BrowserStack App Automate by setting `BROWSERSTACK_ENABLED=true`. The checked-in JSON contains safe defaults only; username, access key, app URL, device, and OS version must be supplied at runtime. The framework uses Appium .NET v5 typed standard capabilities for platform, automation name, device, OS version, and app, plus the W3C `bstack:options` extension for BrowserStack metadata and optional diagnostics.
 
-This is an integration-ready path, not a claim that a cloud session was run from this repository. The actual app upload identifier, device matrix, account, and CI secrets belong in the team's protected BrowserStack configuration.
+When BrowserStack is enabled, these values are required:
+
+| Setting | Purpose |
+| --- | --- |
+| `BROWSERSTACK_USERNAME` | BrowserStack account username, stored as a secret |
+| `BROWSERSTACK_ACCESS_KEY` | BrowserStack access key, stored as a secret |
+| `BROWSERSTACK_APP_URL` | Uploaded app identifier such as `bs://...` |
+| `BROWSERSTACK_DEVICE_NAME` | BrowserStack real device name |
+| `BROWSERSTACK_OS_VERSION` | Device operating-system version |
+| `BROWSERSTACK_HUB_URL` | Appium hub URL; defaults to `https://hub-cloud.browserstack.com/wd/hub` |
+| `BROWSERSTACK_PROJECT_NAME` | BrowserStack project grouping |
+| `BROWSERSTACK_BUILD_NAME` | Build grouping for dashboards |
+| `BROWSERSTACK_SESSION_NAME` | Human-readable session name |
+
+Optional diagnostic settings are `BROWSERSTACK_DEBUG`, `BROWSERSTACK_VIDEO`, and `BROWSERSTACK_NETWORK_LOGS`. They default to `false` unless enabled through environment variables. The same settings can be expressed with .NET nested names such as `BrowserStack__AccessKey`; the uppercase `BROWSERSTACK_*` aliases are convenient for local shells and CI.
+
+#### Upload an app and obtain its app URL
+
+Upload the APK or IPA through the BrowserStack App Automate upload API. The response contains an `app_url` value beginning with `bs://`; use that value for `BROWSERSTACK_APP_URL`. Do not commit the binary or the credentials.
+
+```bash
+curl -u "${BROWSERSTACK_USERNAME}:${BROWSERSTACK_ACCESS_KEY}" \
+  -X POST "https://api-cloud.browserstack.com/app-automate/upload" \
+  -F "file=@/absolute/path/to/app.apk"
+```
+
+For a PowerShell session, the equivalent is:
+
+```powershell
+$pair = "$env:BROWSERSTACK_USERNAME`:$env:BROWSERSTACK_ACCESS_KEY"
+curl.exe --user $pair --request POST `
+  --form "file=@C:\absolute\path\to\app.apk" `
+  https://api-cloud.browserstack.com/app-automate/upload
+```
+
+#### Run the BrowserStack smoke test locally
+
+```powershell
+$env:RUN_APPIUM_TESTS = "true"
+$env:BROWSERSTACK_ENABLED = "true"
+$env:BROWSERSTACK_USERNAME = "value-from-your-secret-store"
+$env:BROWSERSTACK_ACCESS_KEY = "value-from-your-secret-store"
+$env:BROWSERSTACK_APP_URL = "bs://your-uploaded-app-id"
+$env:BROWSERSTACK_DEVICE_NAME = "Google Pixel 7"
+$env:BROWSERSTACK_OS_VERSION = "13.0"
+$env:BROWSERSTACK_PROJECT_NAME = "CSharp Appium Interview Framework"
+$env:BROWSERSTACK_BUILD_NAME = "interview-prep-local"
+$env:BROWSERSTACK_SESSION_NAME = "login-smoke"
+$env:BROWSERSTACK_DEBUG = "true"
+$env:BROWSERSTACK_VIDEO = "true"
+$env:BROWSERSTACK_NETWORK_LOGS = "true"
+$env:DEMO_APP_USERNAME = "value-from-your-secret-store"
+$env:DEMO_APP_PASSWORD = "value-from-your-secret-store"
+
+dotnet test AppiumInterviewFramework.sln --filter Category=Mobile
+```
+
+The app URL, device name, and OS version must match the uploaded app and the BrowserStack device catalog. The sample login locators remain placeholders and must be replaced with the real app's accessibility IDs.
+
+#### App Live versus App Automate
+
+BrowserStack App Automate is the remote execution service used by this framework. It runs Appium tests on real devices and provides session logs, screenshots, video, and optional network logs. BrowserStack App Live is an interactive manual device session used to explore the app, reproduce a problem, inspect behavior, or confirm a locator. App Live does not replace automated CI execution.
 
 The placeholder locators in `LoginPage` are:
 
@@ -112,6 +173,22 @@ The Appium server, emulator/device, app path/package, and the four placeholder a
 The included workflow always restores, builds, and runs the device-free `BuildValidation` category on a GitHub-hosted runner. The `mobile-smoke` job is opt-in through the repository variable `RUN_APPIUM_TESTS=true` and expects a self-hosted runner that already has Appium, the platform SDK, a connected device/emulator, and the configured app.
 
 Store `DEMO_APP_USERNAME` and `DEMO_APP_PASSWORD` as CI secrets. Put device/app configuration in runner environment variables or a protected CI configuration layer; do not place credentials in `appsettings.json` or source control.
+
+The `browserstack-smoke` job is also opt-in. Enable it by setting the repository variable `RUN_BROWSERSTACK_TESTS=true` or by manually starting the workflow with the `run_browserstack` input. Configure these repository secrets:
+
+- `BROWSERSTACK_USERNAME`
+- `BROWSERSTACK_ACCESS_KEY`
+- `DEMO_APP_USERNAME`
+- `DEMO_APP_PASSWORD`
+
+Configure these non-secret repository variables:
+
+- `BROWSERSTACK_APP_URL`
+- `BROWSERSTACK_DEVICE_NAME`
+- `BROWSERSTACK_OS_VERSION`
+- Optional: `BROWSERSTACK_HUB_URL`, `BROWSERSTACK_PROJECT_NAME`, `BROWSERSTACK_BUILD_NAME`, `BROWSERSTACK_SESSION_NAME`, `BROWSERSTACK_DEBUG`, `BROWSERSTACK_VIDEO`, and `BROWSERSTACK_NETWORK_LOGS`.
+
+The job validates required BrowserStack inputs before starting a remote session, runs the `Mobile` category, and publishes test results and failure artifacts when available. BrowserStack does not require a local Appium server in this job because the driver connects directly to the cloud hub.
 
 For larger suites, the next CI improvements would be a device matrix, per-worker Appium ports, test-result publishing, and artifact upload for `TestResults` and the generated failure artifacts.
 
@@ -162,7 +239,7 @@ The teardown captures a screenshot and a log containing the test name, current U
 
 ### How would you run this on BrowserStack?
 
-I would enable the `BrowserStack` configuration section, inject the username and access key as CI secrets, provide the uploaded app identifier, and keep the same page objects and tests. I would use a device/OS matrix for coverage and publish BrowserStack session links alongside the NUnit results. App Live would be used for interactive investigation when a cloud device needs manual inspection.
+I would upload the APK or IPA, set the returned `bs://` app URL, inject the username and access key as CI secrets, configure the device and OS version, and keep the same page objects and tests. The driver uses typed Appium capabilities plus a W3C `bstack:options` block for project, build, session, and diagnostic settings. I would use a device/OS matrix for coverage and publish BrowserStack session links alongside the NUnit results. App Live would be used for interactive investigation when a cloud device needs manual inspection.
 
 ### Why does the repository have both build-validation and mobile categories?
 

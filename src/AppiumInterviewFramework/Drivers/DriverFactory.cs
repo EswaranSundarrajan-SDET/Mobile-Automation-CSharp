@@ -11,8 +11,13 @@ public static class DriverFactory
     public static AppiumDriver Create(FrameworkOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
+        ConfigurationLoader.Validate(options);
 
         var device = options.Device;
+        var browserStack = options.BrowserStack;
+        var deviceName = browserStack.Enabled ? browserStack.DeviceName : device.DeviceName;
+        var platformVersion = browserStack.Enabled ? browserStack.OsVersion : device.PlatformVersion;
+        var app = browserStack.Enabled ? browserStack.AppUrl : device.AppPath;
         var capabilities = new AppiumOptions
         {
             PlatformName = options.TargetPlatform == MobilePlatform.Android ? "Android" : "iOS"
@@ -23,23 +28,23 @@ public static class DriverFactory
             capabilities.AutomationName = device.AutomationName;
         }
 
-        if (!string.IsNullOrWhiteSpace(device.DeviceName))
+        if (!string.IsNullOrWhiteSpace(deviceName))
         {
-            capabilities.DeviceName = device.DeviceName;
+            capabilities.DeviceName = deviceName;
         }
 
-        if (!string.IsNullOrWhiteSpace(device.PlatformVersion))
+        if (!string.IsNullOrWhiteSpace(platformVersion))
         {
-            capabilities.PlatformVersion = device.PlatformVersion;
+            capabilities.PlatformVersion = platformVersion;
         }
 
-        if (!string.IsNullOrWhiteSpace(device.AppPath))
+        if (!string.IsNullOrWhiteSpace(app))
         {
-            capabilities.App = device.AppPath;
+            capabilities.App = app;
         }
 
         capabilities.AddAdditionalAppiumOption("noReset", options.NoReset);
-        AddBrowserStackOptions(capabilities, options.BrowserStack);
+        AddBrowserStackOptions(capabilities, browserStack);
 
         if (options.TargetPlatform == MobilePlatform.Android)
         {
@@ -73,13 +78,11 @@ public static class DriverFactory
             ["accessKey"] = options.AccessKey,
             ["projectName"] = options.ProjectName,
             ["buildName"] = options.BuildName,
-            ["sessionName"] = options.SessionName
+            ["sessionName"] = options.SessionName,
+            ["debug"] = options.Debug,
+            ["video"] = options.Video,
+            ["networkLogs"] = options.NetworkLogs
         };
-
-        if (!string.IsNullOrWhiteSpace(options.App))
-        {
-            browserStackOptions["app"] = options.App;
-        }
 
         capabilities.AddAdditionalOption("bstack:options", browserStackOptions);
     }

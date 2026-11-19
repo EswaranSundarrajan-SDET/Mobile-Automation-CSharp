@@ -30,8 +30,8 @@ public sealed class FrameworkOptions
 
     public TimeSpan WaitTimeout => TimeSpan.FromSeconds(WaitTimeoutSeconds);
 
-    public string EffectiveServerUrl => BrowserStack.Enabled && !string.IsNullOrWhiteSpace(BrowserStack.ServerUrl)
-        ? BrowserStack.ServerUrl
+    public string EffectiveServerUrl => BrowserStack.Enabled && !string.IsNullOrWhiteSpace(BrowserStack.HubUrl)
+        ? BrowserStack.HubUrl
         : AppiumServerUrl;
 }
 
@@ -56,17 +56,34 @@ public sealed class BrowserStackOptions
 {
     public bool Enabled { get; set; }
 
-    public string ServerUrl { get; set; } = "https://hub-cloud.browserstack.com/wd/hub";
+    public string HubUrl { get; set; } = "https://hub-cloud.browserstack.com/wd/hub";
+
+    // Kept for compatibility with the first version of the sample framework.
+    public string ServerUrl
+    {
+        get => HubUrl;
+        set => HubUrl = value;
+    }
 
     public string Username { get; set; } = string.Empty;
 
     public string AccessKey { get; set; } = string.Empty;
 
-    public string App { get; set; } = string.Empty;
+    public string AppUrl { get; set; } = string.Empty;
+
+    public string DeviceName { get; set; } = string.Empty;
+
+    public string OsVersion { get; set; } = string.Empty;
 
     public string ProjectName { get; set; } = "CSharp Appium Interview Framework";
 
     public string BuildName { get; set; } = "local-build";
 
     public string SessionName { get; set; } = "Appium login smoke";
+
+    public bool Debug { get; set; }
+
+    public bool Video { get; set; }
+
+    public bool NetworkLogs { get; set; }
 }
