@@ -43,7 +43,7 @@ dotnet build MobileAutomation.sln --configuration Release --no-restore
 dotnet test MobileAutomation.sln --configuration Release --no-build --filter "Category=BuildValidation"
 ```
 
-The configuration tests check local defaults, required BrowserStack settings and environment overrides. A regular `dotnet test` also discovers the login test. It is skipped until you enable mobile execution.
+The configuration tests check local defaults, platform selection, required BrowserStack settings and environment overrides. A regular `dotnet test` also discovers the login test. It is skipped until you enable mobile execution.
 
 ## Run the login test on a local device
 
@@ -55,14 +55,14 @@ The configuration tests check local defaults, required BrowserStack settings and
 For example, with Appium listening at the default address `http://127.0.0.1:4723`, run the following in a second PowerShell window. Replace the device name and app path with your own.
 
 ```powershell
-$env:Platform = "Android"
+$env:MOBILE_PLATFORM = "Android"
 $env:Android__DeviceName = "emulator-5554"
 $env:Android__AppPath = "C:\apps\your-app.apk"
 $env:RUN_APPIUM_TESTS = "true"
 dotnet test MobileAutomation.sln --filter "Category=Mobile"
 ```
 
-For iOS, set `Platform=Ios`, `Ios__DeviceName` and `Ios__AppPath` or `Ios__BundleId`. Set `Ios__PlatformVersion` if needed. `AppiumServerUrl` overrides the local server address. `WaitTimeoutSeconds` controls how long a page will wait for an element (15 seconds by default).
+Use `MOBILE_PLATFORM` in the shell so the mobile platform choice does not interfere with the .NET build. For iOS, set `MOBILE_PLATFORM=Ios`, `Ios__DeviceName` and `Ios__AppPath` or `Ios__BundleId`. Set `Ios__PlatformVersion` if needed. `AppiumServerUrl` overrides the local server address. `WaitTimeoutSeconds` controls how long a page will wait for an element (15 seconds by default).
 
 ## Run the same test on BrowserStack
 
@@ -73,7 +73,7 @@ Upload your app to BrowserStack App Automate and copy the `app_url` from the upl
 | `RUN_APPIUM_TESTS`, `BROWSERSTACK_ENABLED` | Set both to `true` for a cloud run from your shell. |
 | `BROWSERSTACK_USERNAME`, `BROWSERSTACK_ACCESS_KEY` | BrowserStack credentials from your secret store. |
 | `BROWSERSTACK_APP_URL` | Uploaded app reference, such as `bs://...`. |
-| `BROWSERSTACK_DEVICE_NAME`, `BROWSERSTACK_OS_VERSION` | Choose an available device and OS. The defaults are Google Pixel 7 and Android 13.0. For iOS, also set `Platform=Ios`. |
+| `BROWSERSTACK_DEVICE_NAME`, `BROWSERSTACK_OS_VERSION` | Choose an available device and OS. The defaults are Google Pixel 7 and Android 13.0. For iOS, also set `MOBILE_PLATFORM=Ios`. |
 | `DEMO_APP_USERNAME`, `DEMO_APP_PASSWORD` | Credentials for the app's login screen. |
 
 Run `dotnet test MobileAutomation.sln --filter "Category=Mobile"`. You can override the hub, project, build and session names with `BROWSERSTACK_HUB_URL`, `BROWSERSTACK_PROJECT_NAME`, `BROWSERSTACK_BUILD_NAME` and `BROWSERSTACK_SESSION_NAME`. The capture switches are `BROWSERSTACK_DEBUG`, `BROWSERSTACK_VIDEO` and `BROWSERSTACK_NETWORK_LOGS`. Each defaults to `true`.

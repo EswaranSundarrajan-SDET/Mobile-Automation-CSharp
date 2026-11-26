@@ -71,6 +71,9 @@ public static class TestSettingsLoader
 
     private static void ApplyEnvironmentAliases(TestSettings settings)
     {
+        // Platform is also an MSBuild property. Give shell users a separate name for the device platform.
+        settings.Platform = ReadStringAlias("MOBILE_PLATFORM", settings.Platform);
+
         var browserStack = settings.BrowserStack;
         browserStack.Enabled = ReadBooleanAlias("BROWSERSTACK_ENABLED", browserStack.Enabled);
         browserStack.HubUrl = ReadStringAlias("BROWSERSTACK_HUB_URL", browserStack.HubUrl);

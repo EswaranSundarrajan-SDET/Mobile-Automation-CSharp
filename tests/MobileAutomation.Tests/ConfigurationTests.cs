@@ -20,6 +20,24 @@ public sealed class ConfigurationTests
     }
 
     [Test]
+    public void MobilePlatformVariable_SelectsIosDeviceSettings()
+    {
+        var previousPlatform = Environment.GetEnvironmentVariable("MOBILE_PLATFORM");
+        try
+        {
+            Environment.SetEnvironmentVariable("MOBILE_PLATFORM", "Ios");
+            var settings = TestSettingsLoader.Load();
+
+            Assert.That(settings.TargetPlatform, Is.EqualTo(MobilePlatform.Ios));
+            Assert.That(settings.Device.AutomationName, Is.EqualTo("XCUITest"));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MOBILE_PLATFORM", previousPlatform);
+        }
+    }
+
+    [Test]
     public void BrowserStackValidation_ListsMissingCredentialsAndApp()
     {
         var settings = new TestSettings
