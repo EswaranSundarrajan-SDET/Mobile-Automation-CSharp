@@ -2,9 +2,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppiumInterviewFramework", "src\AppiumInterviewFramework\AppiumInterviewFramework.csproj", "{D9ACD395-92DB-43BD-B9C6-7AB0F6020A3F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MobileAutomation", "src\MobileAutomation\MobileAutomation.csproj", "{D9ACD395-92DB-43BD-B9C6-7AB0F6020A3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppiumInterviewFramework.Tests", "tests\AppiumInterviewFramework.Tests\AppiumInterviewFramework.Tests.csproj", "{4E3A2BC3-08AE-4B11-B3C7-4A8F0A8FB902}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MobileAutomation.Tests", "tests\MobileAutomation.Tests\MobileAutomation.Tests.csproj", "{4E3A2BC3-08AE-4B11-B3C7-4A8F0A8FB902}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

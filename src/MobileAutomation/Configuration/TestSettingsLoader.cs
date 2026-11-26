@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Configuration;
 
-namespace AppiumInterviewFramework.Configuration;
+namespace MobileAutomation.Configuration;
 
-public static class ConfigurationLoader
+/// <summary>Reads appsettings.json and applies overrides from the current environment.</summary>
+public static class TestSettingsLoader
 {
-    public static FrameworkOptions Load(string fileName = "appsettings.json", string? basePath = null)
+    /// <summary>Load the settings used by both local and BrowserStack tests.</summary>
+    public static TestSettings Load(string fileName = "appsettings.json", string? basePath = null)
     {
         var configuration = new ConfigurationBuilder()
             .SetBasePath(basePath ?? AppContext.BaseDirectory)
@@ -12,49 +14,50 @@ public static class ConfigurationLoader
             .AddEnvironmentVariables()
             .Build();
 
-        var options = configuration.Get<FrameworkOptions>();
-        if (options is null)
+        var settings = configuration.Get<TestSettings>();
+        if (settings is null)
         {
-            throw new InvalidOperationException("Could not bind FrameworkOptions from configuration.");
+            throw new InvalidOperationException("Could not read the mobile test settings.");
         }
 
-        ApplyEnvironmentAliases(options);
-        Validate(options);
-        return options;
+        ApplyEnvironmentAliases(settings);
+        Validate(settings);
+        return settings;
     }
 
-    public static void Validate(FrameworkOptions options)
+    /// <summary>Check the platform, wait timeout and required BrowserStack settings before starting a session.</summary>
+    public static void Validate(TestSettings settings)
     {
-        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(settings);
 
-        if (options.WaitTimeoutSeconds <= 0)
+        if (settings.WaitTimeoutSeconds <= 0)
         {
             throw new InvalidOperationException("WaitTimeoutSeconds must be greater than zero.");
         }
 
-        _ = options.TargetPlatform;
+        _ = settings.TargetPlatform;
 
-        if (!options.BrowserStack.Enabled)
+        if (!settings.BrowserStack.Enabled)
         {
             return;
         }
 
         var missing = new List<string>();
-        AddMissing(missing, "BrowserStack.HubUrl", options.BrowserStack.HubUrl);
-        AddMissing(missing, "BrowserStack.Username", options.BrowserStack.Username);
-        AddMissing(missing, "BrowserStack.AccessKey", options.BrowserStack.AccessKey);
-        AddMissing(missing, "BrowserStack.AppUrl", options.BrowserStack.AppUrl);
-        AddMissing(missing, "BrowserStack.DeviceName", options.BrowserStack.DeviceName);
-        AddMissing(missing, "BrowserStack.OsVersion", options.BrowserStack.OsVersion);
-        AddMissing(missing, "BrowserStack.ProjectName", options.BrowserStack.ProjectName);
-        AddMissing(missing, "BrowserStack.BuildName", options.BrowserStack.BuildName);
-        AddMissing(missing, "BrowserStack.SessionName", options.BrowserStack.SessionName);
+        AddMissing(missing, "BrowserStack.HubUrl", settings.BrowserStack.HubUrl);
+        AddMissing(missing, "BrowserStack.Username", settings.BrowserStack.Username);
+        AddMissing(missing, "BrowserStack.AccessKey", settings.BrowserStack.AccessKey);
+        AddMissing(missing, "BrowserStack.AppUrl", settings.BrowserStack.AppUrl);
+        AddMissing(missing, "BrowserStack.DeviceName", settings.BrowserStack.DeviceName);
+        AddMissing(missing, "BrowserStack.OsVersion", settings.BrowserStack.OsVersion);
+        AddMissing(missing, "BrowserStack.ProjectName", settings.BrowserStack.ProjectName);
+        AddMissing(missing, "BrowserStack.BuildName", settings.BrowserStack.BuildName);
+        AddMissing(missing, "BrowserStack.SessionName", settings.BrowserStack.SessionName);
 
-        if (!Uri.TryCreate(options.BrowserStack.HubUrl, UriKind.Absolute, out var hubUri) ||
+        if (!Uri.TryCreate(settings.BrowserStack.HubUrl, UriKind.Absolute, out var hubUri) ||
             (hubUri.Scheme != Uri.UriSchemeHttps && hubUri.Scheme != Uri.UriSchemeHttp))
         {
             throw new InvalidOperationException(
-                $"BrowserStack.HubUrl must be an absolute HTTP(S) URL. Received '{options.BrowserStack.HubUrl}'.");
+                $"BrowserStack.HubUrl must be an absolute HTTP(S) URL. Received '{settings.BrowserStack.HubUrl}'.");
         }
 
         if (missing.Count > 0)
@@ -66,9 +69,9 @@ public static class ConfigurationLoader
         }
     }
 
-    private static void ApplyEnvironmentAliases(FrameworkOptions options)
+    private static void ApplyEnvironmentAliases(TestSettings settings)
     {
-        var browserStack = options.BrowserStack;
+        var browserStack = settings.BrowserStack;
         browserStack.Enabled = ReadBooleanAlias("BROWSERSTACK_ENABLED", browserStack.Enabled);
         browserStack.HubUrl = ReadStringAlias("BROWSERSTACK_HUB_URL", browserStack.HubUrl);
         browserStack.Username = ReadStringAlias("BROWSERSTACK_USERNAME", browserStack.Username);
