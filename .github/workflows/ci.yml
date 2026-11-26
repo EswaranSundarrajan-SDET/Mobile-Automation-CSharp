@@ -1,4 +1,4 @@
-name: .NET Appium framework CI
+name: Mobile automation tests
 
 on:
   push:
@@ -21,11 +21,11 @@ jobs:
         with:
           dotnet-version: 8.x
       - name: Restore
-        run: dotnet restore AppiumInterviewFramework.sln
+        run: dotnet restore MobileAutomation.sln
       - name: Build
-        run: dotnet build AppiumInterviewFramework.sln --configuration Release --no-restore
+        run: dotnet build MobileAutomation.sln --configuration Release --no-restore
       - name: Run configuration checks
-        run: dotnet test AppiumInterviewFramework.sln --configuration Release --no-build --filter Category=BuildValidation
+        run: dotnet test MobileAutomation.sln --configuration Release --no-build --filter Category=BuildValidation
 
   mobile-smoke:
     if: ${{ vars.RUN_APPIUM_TESTS == 'true' }}
@@ -36,13 +36,13 @@ jobs:
         with:
           dotnet-version: 8.x
       - name: Restore and build
-        run: dotnet build AppiumInterviewFramework.sln --configuration Release
+        run: dotnet build MobileAutomation.sln --configuration Release
       - name: Run Appium smoke test
         env:
           RUN_APPIUM_TESTS: true
           DEMO_APP_USERNAME: ${{ secrets.DEMO_APP_USERNAME }}
           DEMO_APP_PASSWORD: ${{ secrets.DEMO_APP_PASSWORD }}
-        run: dotnet test AppiumInterviewFramework.sln --configuration Release --no-build --filter Category=Mobile
+        run: dotnet test MobileAutomation.sln --configuration Release --no-build --filter Category=Mobile
 
   browserstack-smoke:
     if: ${{ vars.RUN_BROWSERSTACK_TESTS == 'true' || inputs.run_browserstack == true }}
@@ -56,7 +56,7 @@ jobs:
         with:
           dotnet-version: 8.x
       - name: Restore and build
-        run: dotnet build AppiumInterviewFramework.sln --configuration Release
+        run: dotnet build MobileAutomation.sln --configuration Release
       - name: Validate BrowserStack configuration
         shell: bash
         env:
@@ -90,7 +90,7 @@ jobs:
           BROWSERSTACK_NETWORK_LOGS: ${{ vars.BROWSERSTACK_NETWORK_LOGS || 'true' }}
           DEMO_APP_USERNAME: ${{ secrets.DEMO_APP_USERNAME }}
           DEMO_APP_PASSWORD: ${{ secrets.DEMO_APP_PASSWORD }}
-        run: dotnet test AppiumInterviewFramework.sln --configuration Release --no-build --filter Category=Mobile --logger "trx;LogFileName=browserstack-smoke.trx"
+        run: dotnet test MobileAutomation.sln --configuration Release --no-build --filter Category=Mobile --logger "trx;LogFileName=browserstack-smoke.trx"
       - name: Publish BrowserStack test artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@v4

@@ -1,8 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
-    <RootNamespace>AppiumInterviewFramework.Tests</RootNamespace>
-    <AssemblyName>AppiumInterviewFramework.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AppiumInterviewFramework\AppiumInterviewFramework.csproj" />
+    <ProjectReference Include="..\..\src\MobileAutomation\MobileAutomation.csproj" />
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

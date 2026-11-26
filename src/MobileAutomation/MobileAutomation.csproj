@@ -1,9 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <RootNamespace>AppiumInterviewFramework</RootNamespace>
-    <AssemblyName>AppiumInterviewFramework</AssemblyName>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Appium.WebDriver" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
