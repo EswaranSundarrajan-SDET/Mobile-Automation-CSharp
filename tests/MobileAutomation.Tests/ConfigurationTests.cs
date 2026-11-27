@@ -8,8 +8,10 @@ namespace MobileAutomation.Tests;
 public sealed class ConfigurationTests
 {
     [Test]
+    [Description("Checks that the default settings use a local Android session with a positive element wait time.")]
     public void DefaultSettings_SelectLocalAndroid()
     {
+        // Load the settings that ship with the test project.
         var settings = TestSettingsLoader.Load();
 
         Assert.That(settings.AppiumServerUrl, Is.EqualTo("http://127.0.0.1:4723"));
@@ -20,12 +22,15 @@ public sealed class ConfigurationTests
     }
 
     [Test]
+    [Description("Checks that setting MOBILE_PLATFORM to Ios selects the iOS device settings and XCUITest.")]
     public void MobilePlatformVariable_SelectsIosDeviceSettings()
     {
+        // Save the original platform so it can be restored after this test.
         var previousPlatform = Environment.GetEnvironmentVariable("MOBILE_PLATFORM");
         try
         {
             Environment.SetEnvironmentVariable("MOBILE_PLATFORM", "Ios");
+            // Load the settings again to pick up the temporary iOS override.
             var settings = TestSettingsLoader.Load();
 
             Assert.That(settings.TargetPlatform, Is.EqualTo(MobilePlatform.Ios));
@@ -33,24 +38,30 @@ public sealed class ConfigurationTests
         }
         finally
         {
+            // Restore the original value even if the assertions fail.
             Environment.SetEnvironmentVariable("MOBILE_PLATFORM", previousPlatform);
         }
     }
 
     [Test]
+    [Description("Checks that validation names each missing BrowserStack credential and app reference and that the other settings have defaults.")]
     public void BrowserStackValidation_ListsMissingCredentialsAndApp()
     {
+        // Turn on BrowserStack and leave its credentials and app reference blank.
         var settings = new TestSettings
         {
             BrowserStack = new BrowserStackSettings { Enabled = true }
         };
 
+        // Capture the error to check that it tells the reader what to supply.
         var exception = Assert.Throws<InvalidOperationException>(() => TestSettingsLoader.Validate(settings));
 
+        // Check that the error names the account, secret key and uploaded app reference.
         Assert.That(exception!.Message, Does.Contain("BrowserStack.Username"));
         Assert.That(exception.Message, Does.Contain("BrowserStack.AccessKey"));
         Assert.That(exception.Message, Does.Contain("BrowserStack.AppUrl"));
 
+        // Check the device, dashboard labels and capture options provided by default.
         Assert.That(settings.BrowserStack.DeviceName, Is.EqualTo("Google Pixel 7"));
         Assert.That(settings.BrowserStack.OsVersion, Is.EqualTo("13.0"));
         Assert.That(settings.BrowserStack.ProjectName, Is.EqualTo("Mobile Automation"));
@@ -62,8 +73,10 @@ public sealed class ConfigurationTests
     }
 
     [Test]
+    [Description("Checks that BROWSERSTACK variables replace the values loaded from the settings file.")]
     public void EnvironmentVariables_OverrideBrowserStackDefaults()
     {
+        // Use sample values so the test can exercise overrides without connecting to BrowserStack.
         var namesAndValues = new Dictionary<string, string>
         {
             ["BROWSERSTACK_ENABLED"] = "true",
@@ -75,17 +88,20 @@ public sealed class ConfigurationTests
             ["BROWSERSTACK_BUILD_NAME"] = "build-from-environment",
             ["BROWSERSTACK_DEBUG"] = "true"
         };
+        // Save the original value of each environment variable before replacing it.
         var previousValues = namesAndValues.Keys.ToDictionary(
             name => name,
             Environment.GetEnvironmentVariable);
 
         try
         {
+            // Read each name and sample value from the test data and apply it to the process.
             foreach (var pair in namesAndValues)
             {
                 Environment.SetEnvironmentVariable(pair.Key, pair.Value);
             }
 
+            // Load the settings after the environment variables have been set.
             var settings = TestSettingsLoader.Load();
 
             Assert.That(settings.BrowserStack.Enabled, Is.True);
@@ -96,6 +112,7 @@ public sealed class ConfigurationTests
         }
         finally
         {
+            // Restore each name to its saved value even if an assertion fails.
             foreach (var pair in previousValues)
             {
                 Environment.SetEnvironmentVariable(pair.Key, pair.Value);
